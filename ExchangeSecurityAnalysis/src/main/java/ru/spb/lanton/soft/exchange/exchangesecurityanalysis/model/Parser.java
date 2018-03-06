@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -164,12 +165,12 @@ public class Parser extends AsyncTask {
             output("Файлов за указанную дату не найдено!");
         } else {
             // подготовить данные об уникальных атаках
-            fillIpCounty();
             publishProgress("Подготавливаются списки данных о пользователях и IP...", Output.STATUS);
             prepareUnicumTerrorIpList();
             prepareUnicumTerrorUsernameList();
             controller.enabledButtonPrintToScree();
             controller.enabledButtonPrintToFile();
+            controller.enabledButtonGetIpCountry();
         }
 
         Date dateNow = new Date();
@@ -180,7 +181,7 @@ public class Parser extends AsyncTask {
     /**
      * Получаем страны для IP адресов.
      */
-    private void fillIpCounty() {
+    public void fillIpCounty() {
         int i = 1;
         int total = terrorListAll.size();
         for (Terror terror : terrorListAll) {
@@ -197,6 +198,7 @@ public class Parser extends AsyncTask {
         String jsonAnswer = null;
         String country = null;
         String site = "http://freegeoip.net/json/" + address;
+       // site = "http://ip-api.com/json/" + address;
         URL url = null;
         try {
             url = new URL(site);
@@ -214,7 +216,10 @@ public class Parser extends AsyncTask {
         } catch (ProtocolException ex) {
             Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+        try  {
+            InputStream stream = connection.getInputStream();
+            InputStreamReader isr = new InputStreamReader(stream);
+            BufferedReader in = new BufferedReader(isr);
             String inputLine;
             StringBuffer response = new StringBuffer();
             while ((inputLine = in.readLine()) != null) {

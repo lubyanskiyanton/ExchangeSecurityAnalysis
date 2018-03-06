@@ -19,7 +19,7 @@ public class Terror {
     public Terror(String userName, String ip, String date, String protocol) {
         this.userName = userName;
         this.ip = ip;
-        ipCountry = "";
+        ipCountry = "не определялось";
         this.date = date;
         this.protocol = protocol;
         countAttackIp = 1;

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ru.spb.lanton.soft.exchange.exchangesecurityanalysis.view;
 
 import java.net.URL;
@@ -36,6 +31,9 @@ public class WindowMainController implements Initializable {
     private Button buttonPrepareData;
     
     @FXML
+    private Button buttonGetIpCountry;
+    
+    @FXML
     private Button buttonPrintToScreen;
     
     @FXML
@@ -67,6 +65,7 @@ public class WindowMainController implements Initializable {
         choice.setDisable(true);
         buttonPrintToScreen.setDisable(true);
         buttonPrintToFile.setDisable(true);
+        buttonGetIpCountry.setDisable(true);
     }    
     
     @FXML
@@ -82,6 +81,12 @@ public class WindowMainController implements Initializable {
         terminal.clear();
         buttonPrepareData.setDisable(true);
         parser.execute(null);   
+    }
+    
+    @FXML
+    private void pressButtonGetIpCountry() {
+        parser.fillIpCounty();
+        buttonGetIpCountry.setDisable(true);
     }
     
     @FXML
@@ -105,7 +110,7 @@ public class WindowMainController implements Initializable {
         about.setHeaderText(null);
         StringBuilder msg = new StringBuilder();
         msg.append("Анализатор логов Exchange server\n");
-        msg.append("Версии 1.2\n");
+        msg.append("Версии 1.3\n");
         msg.append("Автор: LAnton\n");
         msg.append("Релиз от 06.02.2018\n");
         msg.append("email: LAntonDev@gmail.com");
@@ -116,6 +121,7 @@ public class WindowMainController implements Initializable {
     @FXML
     private void onChangeDate() {        
         buttonPrepareData.setDisable(false);
+        buttonGetIpCountry.setDisable(true);
         buttonPrintToFile.setDisable(true);
         buttonPrintToScreen.setDisable(true);
         choice.setDisable(true);
@@ -131,6 +137,10 @@ public class WindowMainController implements Initializable {
             buttonPrintToScreen.setDisable(false);
             buttonPrintToFile.setDisable(false);
         }
+    }
+    
+    public void enabledButtonGetIpCountry() {
+        buttonGetIpCountry.setDisable(false);
     }
     
     public void enabledButtonPrintToScree() {
