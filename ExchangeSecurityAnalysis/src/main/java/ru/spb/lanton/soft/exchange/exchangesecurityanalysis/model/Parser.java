@@ -167,10 +167,7 @@ public class Parser extends AsyncTask {
             // подготовить данные об уникальных атаках
             publishProgress("Подготавливаются списки данных о пользователях и IP...", Output.STATUS);
             prepareUnicumTerrorIpList();
-            prepareUnicumTerrorUsernameList();
-            controller.enabledButtonPrintToScree();
-            controller.enabledButtonPrintToFile();
-            controller.enabledButtonGetIpCountry();
+            prepareUnicumTerrorUsernameList();            
         }
 
         Date dateNow = new Date();
@@ -508,15 +505,29 @@ public class Parser extends AsyncTask {
 
     @Override
     public Object doInBackground(Object... params) {
-        prepareData();
-        return params;
+        switch ((TypeTask)params[1]) {
+            case PrepareData:
+                prepareData();
+                break;
+            case GetIpCountry:
+                fillIpCounty();
+                break;
+        }
+        return params[1];
     }
 
     @Override
     public void onPostExecute(Object params) {
-        controller.enabledButtonPrintToFile();
-        controller.enabledButtonPrintToScree();
-        controller.enabledChoicer();
+        switch ((TypeTask)params) {
+            case PrepareData:
+                controller.enabledButtonGetIpCountry();
+                controller.enabledButtonPrintToFile();
+                controller.enabledButtonPrintToScree();
+                controller.enabledChoicer();                
+                break;
+            case GetIpCountry:
+                break;
+        }
     }
 
     @Override

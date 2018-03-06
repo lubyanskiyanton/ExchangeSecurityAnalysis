@@ -13,6 +13,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import ru.spb.lanton.soft.exchange.exchangesecurityanalysis.model.Output;
 import ru.spb.lanton.soft.exchange.exchangesecurityanalysis.model.Parser;
+import ru.spb.lanton.soft.exchange.exchangesecurityanalysis.model.TypeTask;
+import static ru.spb.lanton.soft.exchange.exchangesecurityanalysis.model.TypeTask.GetIpCountry;
+import static ru.spb.lanton.soft.exchange.exchangesecurityanalysis.model.TypeTask.PrepareData;
 
 /**
  * FXML Controller class
@@ -80,12 +83,12 @@ public class WindowMainController implements Initializable {
         parser.setDate(date.getValue());
         terminal.clear();
         buttonPrepareData.setDisable(true);
-        parser.execute(null);   
+        parser.execute(PrepareData);   
     }
     
     @FXML
     private void pressButtonGetIpCountry() {
-        parser.fillIpCounty();
+        parser.execute(GetIpCountry);
         buttonGetIpCountry.setDisable(true);
     }
     
