@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import ru.spb.lanton.soft.exchange.exchangesecurityanalysis.data.DataAccessLayer;
+import ru.spb.lanton.soft.exchange.exchangesecurityanalysis.data.FileDB;
 import ru.spb.lanton.soft.exchange.exchangesecurityanalysis.view.WindowMainController;
 
 public class Parser extends AsyncTask {
@@ -42,6 +44,8 @@ public class Parser extends AsyncTask {
     private final Set<Terror> terrorListUnicumIp;
 
     private final Set<Terror> terrorListUnicumName;
+    
+    private Map<String, String> ipMap;
 
     private final WindowMainController controller;
 
@@ -52,6 +56,8 @@ public class Parser extends AsyncTask {
     private final List<String> fullLogList;
 
     private final ResourceBundle rb;
+    
+    private final DataAccessLayer DataBase;
 
     /**
      * Дефолтный конструктор.
@@ -63,14 +69,15 @@ public class Parser extends AsyncTask {
         terrorListAll = new ArrayList<>();
         terrorListUnicumIp = new HashSet<>();
         terrorListUnicumName = new HashSet<>();
+        ipMap = new HashMap<>();
         fullLog = false;
         fullLogList = new ArrayList<>();
         rb = ResourceBundle.getBundle("settings");
+        DataBase = new FileDB();
     }
 
     /**
      * Установка даты отчета.
-     *
      * @param date дата.
      */
     public void setDate(LocalDate date) {
@@ -181,9 +188,18 @@ public class Parser extends AsyncTask {
     public void fillIpCounty() {
         int i = 1;
         int total = terrorListAll.size();
+        String ip;
+        String country;
         for (Terror terror : terrorListAll) {
             publishProgress("Получаем данные о местоположении IP адресов: " + i + " из " + total, Output.STATUS);
-            terror.setIpCountry(getCountry(terror.getIp()));
+            ip = terror.getIp();
+            if (ipMap.containsKey(ip)) {
+                country = ipMap.get(ip);
+            } else {
+                country = getCountry(ip);
+                ipMap.put(ip, country);
+            }
+            terror.setIpCountry(country);
             i++;
         }
     }
@@ -192,46 +208,49 @@ public class Parser extends AsyncTask {
      * Получить страну для адреса.
      */
     private String getCountry(String address) {
-        String jsonAnswer = null;
-        String country = null;
-        String site = "http://freegeoip.net/json/" + address;
-       // site = "http://ip-api.com/json/" + address;
-        URL url = null;
-        try {
-            url = new URL(site);
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        HttpURLConnection connection = null;
-        try {
-            connection = (HttpURLConnection) url.openConnection();
-        } catch (IOException ex) {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            connection.setRequestMethod("GET");
-        } catch (ProtocolException ex) {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try  {
-            InputStream stream = connection.getInputStream();
-            InputStreamReader isr = new InputStreamReader(stream);
-            BufferedReader in = new BufferedReader(isr);
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+        String country = DataBase.getCountry(address); // ищем страну по ip в локальной БД
+        if (country == null) { // если не нашлось данных в локальной БД, тогда лезем в инет            
+            String jsonAnswer = null;
+            String site = "http://api.ipstack.com/" + address + "?access_key=" + rb.getString("key");
+           // site = "http://ip-api.com/json/" + address;
+            URL url = null;
+            try {
+                url = new URL(site);
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
             }
-            jsonAnswer = response.toString();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        JSONParser parser = new JSONParser();
-        try {
-            JSONObject object = (JSONObject) parser.parse(jsonAnswer);
-            country = (String) object.get("country_name");
-        } catch (ParseException ex) {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+            HttpURLConnection connection = null;
+            try {
+                connection = (HttpURLConnection) url.openConnection();
+            } catch (IOException ex) {
+                Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                connection.setRequestMethod("GET");
+            } catch (ProtocolException ex) {
+                Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try  {
+                InputStream stream = connection.getInputStream();
+                InputStreamReader isr = new InputStreamReader(stream);
+                BufferedReader in = new BufferedReader(isr);
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                jsonAnswer = response.toString();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            JSONParser parser = new JSONParser();
+            try {
+                JSONObject object = (JSONObject) parser.parse(jsonAnswer);
+                country = (String) object.get("country_name");
+            } catch (ParseException ex) {
+                Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            DataBase.addIpAndCountry(address, country); // записываем найденные данные в локальную БД
         }
         return country;
     }
@@ -505,7 +524,7 @@ public class Parser extends AsyncTask {
 
     @Override
     public Object doInBackground(Object... params) {
-        switch ((TypeTask)params[1]) {
+        switch ((TypeTask)params[0]) {
             case PrepareData:
                 prepareData();
                 break;
@@ -513,7 +532,7 @@ public class Parser extends AsyncTask {
                 fillIpCounty();
                 break;
         }
-        return params[1];
+        return params[0];
     }
 
     @Override
@@ -526,6 +545,8 @@ public class Parser extends AsyncTask {
                 controller.enabledChoicer();                
                 break;
             case GetIpCountry:
+                controller.enabledButtonPrintToFile();
+                controller.enabledButtonPrintToScree();
                 break;
         }
     }

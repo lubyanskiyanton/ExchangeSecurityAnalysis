@@ -27,7 +27,13 @@ public abstract class AsyncTask<T1,T2,T3> {
         });
     }
 
-    public final Thread backGroundThread = new Thread(new Runnable() {
+    private  Thread backGroundThread;
+
+    Object params;
+
+    public void execute(final T1... params) {
+        this.params = params;
+        backGroundThread = new Thread(new Runnable() {
         @Override
         public void run() {
 
@@ -41,11 +47,6 @@ public abstract class AsyncTask<T1,T2,T3> {
             });
         }
     });
-
-    Object params;
-
-    public void execute(final T1... params) {
-        this.params = params;
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -54,6 +55,7 @@ public abstract class AsyncTask<T1,T2,T3> {
 
                 backGroundThread.setDaemon(daemon);
                 backGroundThread.start();
+                
             }
         });
     }

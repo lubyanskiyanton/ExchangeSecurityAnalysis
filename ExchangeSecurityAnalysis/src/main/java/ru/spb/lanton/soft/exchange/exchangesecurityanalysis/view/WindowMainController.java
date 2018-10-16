@@ -113,9 +113,9 @@ public class WindowMainController implements Initializable {
         about.setHeaderText(null);
         StringBuilder msg = new StringBuilder();
         msg.append("Анализатор логов Exchange server\n");
-        msg.append("Версии 1.3\n");
+        msg.append("Версии 1.5\n");
         msg.append("Автор: LAnton\n");
-        msg.append("Релиз от 06.02.2018\n");
+        msg.append("Релиз от 15.10.2018\n");
         msg.append("email: LAntonDev@gmail.com");
         about.setContentText(msg.toString());
         about.showAndWait();
